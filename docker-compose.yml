@@ -1,0 +1,79 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: yoedu-mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes" # Bỏ root password theo yêu cầu
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Chạy tự động script SQL của bạn
+    networks:
+      - yoedu_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: yoedu-express-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - yoedu_network
+
+  frontend:
+    build: ./frontend
+    container_name: yoedu-react-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: npm run dev
+    networks:
+      - yoedu_network
+
+  redis:
+    image: redis:latest
+    container_name: yoedu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - yoedu_network
+
+networks:
+  yoedu_network:
+    name: yoedu_network
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  backend_node_modules:
+  frontend_node_modules:
