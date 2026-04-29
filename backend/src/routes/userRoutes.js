@@ -1,17 +1,21 @@
 const express = require('express');
-const UserController = require('../controllers/UserController');
+const {
+  getCurrentUserProfile,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser
+} = require('../controllers/UserController');
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// Tất cả routes trong file này cần xác thực
-router.use(authenticateToken);
+router.use(authenticateToken); // Áp dụng cho toàn bộ file này
 
-// Routes cho User
-router.get('/profile', UserController.getCurrentUserProfile);
-router.get('/', UserController.getAllUsers);
-router.get('/:id', UserController.getUserById);
-router.put('/:id', UserController.updateUser);
-router.delete('/:id', authorizeRole('ADMIN'), UserController.deleteUser);
+router.get('/profile', getCurrentUserProfile);
+router.get('/', getAllUsers);
+router.get('/:id', getUserById);
+router.put('/:id', updateUser);
+router.delete('/:id', authorizeRole('ADMIN'), deleteUser);
 
 module.exports = router;

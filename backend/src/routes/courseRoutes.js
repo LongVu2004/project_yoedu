@@ -1,16 +1,19 @@
 const express = require('express');
-const CourseController = require('../controllers/CourseController');
+const {
+  getAllCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  deleteCourse
+} = require('../controllers/CourseController');
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// GET - Không cần xác thực
-router.get('/', CourseController.getAllCourses);
-router.get('/:id', CourseController.getCourseById);
-
-// POST, PUT, DELETE - Chỉ ADMIN được phép
-router.post('/', authenticateToken, authorizeRole('ADMIN'), CourseController.createCourse);
-router.put('/:id', authenticateToken, authorizeRole('ADMIN'), CourseController.updateCourse);
-router.delete('/:id', authenticateToken, authorizeRole('ADMIN'), CourseController.deleteCourse);
+router.get('/', getAllCourses);
+router.get('/:id', getCourseById);
+router.post('/', authenticateToken, authorizeRole('ADMIN'), createCourse);
+router.put('/:id', authenticateToken, authorizeRole('ADMIN'), updateCourse);
+router.delete('/:id', authenticateToken, authorizeRole('ADMIN'), deleteCourse);
 
 module.exports = router;
